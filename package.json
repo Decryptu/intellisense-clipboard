@@ -1,0 +1,64 @@
+{
+	"name": "intellisense-clipboard",
+	"displayName": "IntelliSense Clipboard",
+	"description": "Quickly copy IntelliSense hover information, type definitions, and error messages to your clipboard",
+	"version": "0.1.0",
+	"publisher": "your-publisher-name",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/yourusername/intellisense-clipboard"
+	},
+	"engines": {
+		"vscode": "^1.80.0"
+	},
+	"categories": [
+		"Other",
+		"Programming Languages"
+	],
+	"keywords": [
+		"clipboard",
+		"copy",
+		"intellisense",
+		"hover",
+		"tooltip",
+		"type definition",
+		"error message"
+	],
+	"activationEvents": [],
+	"main": "./out/extension.js",
+	"contributes": {
+		"commands": [
+			{
+				"command": "intellisenseClipboard.copyContent",
+				"title": "Copy IntelliSense Info"
+			},
+			{
+				"command": "intellisenseClipboard.copyAtCursor",
+				"title": "Copy IntelliSense Info at Cursor"
+			}
+		],
+		"keybindings": [
+			{
+				"command": "intellisenseClipboard.copyAtCursor",
+				"key": "ctrl+shift+c",
+				"mac": "cmd+shift+c",
+				"when": "editorTextFocus"
+			}
+		]
+	},
+	"scripts": {
+		"vscode:prepublish": "bun run compile",
+		"compile": "tsc -p ./",
+		"watch": "tsc -watch -p ./",
+		"lint": "biome check .",
+		"lint:fix": "biome check --write .",
+		"format": "biome format --write ."
+	},
+	"devDependencies": {
+		"@biomejs/biome": "^2.2.5",
+		"@types/node": "^24.7.0",
+		"@types/bun": "latest",
+		"@types/vscode": "^1.104.0",
+		"typescript": "^5.9.3"
+	}
+}
