@@ -1,10 +1,7 @@
 import * as vscode from 'vscode';
 
 export function activate(context: vscode.ExtensionContext) {
-  console.log('🚀 IntelliSense Clipboard extension is activating!');
-
-  // Register Code Action Provider (Quick Fix)
-  // Register for specific languages instead of '*'
+  // Register Code Action Provider for TypeScript/JavaScript diagnostics
   const selector = [
     { language: 'typescript', scheme: 'file' },
     { language: 'javascript', scheme: 'file' },
@@ -16,24 +13,14 @@ export function activate(context: vscode.ExtensionContext) {
     selector,
     {
       async provideCodeActions(document, range, codeActionContext, token) {
-        console.log('🔍 provideCodeActions called!');
-        console.log('  Range:', range);
-        console.log('  Diagnostics in context:', codeActionContext.diagnostics.length);
-        console.log('  Only requested:', codeActionContext.only?.value);
-        console.log('  Trigger kind:', codeActionContext.triggerKind);
-
-        // Only show if there are diagnostics (errors/warnings) at this location
         const diagnostics = codeActionContext.diagnostics;
         if (!diagnostics || diagnostics.length === 0) {
-          console.log('  ❌ No diagnostics, returning empty');
           return [];
         }
 
         // Collect diagnostic messages
         const diagnosticMessages: string[] = [];
         for (const diagnostic of diagnostics) {
-          console.log('  📋 Diagnostic:', diagnostic.message, 'Severity:', diagnostic.severity);
-
           let message = `[${diagnostic.severity === vscode.DiagnosticSeverity.Error ? 'Error' :
                           diagnostic.severity === vscode.DiagnosticSeverity.Warning ? 'Warning' :
                           diagnostic.severity === vscode.DiagnosticSeverity.Information ? 'Info' : 'Hint'}]`;
@@ -53,7 +40,7 @@ export function activate(context: vscode.ExtensionContext) {
 
         // Create the copy action for diagnostics
         const copyDiagnosticAction = new vscode.CodeAction(
-          '📋 Copy Error Message',
+          'Copy Error Message',
           vscode.CodeActionKind.QuickFix
         );
         copyDiagnosticAction.command = {
@@ -62,7 +49,6 @@ export function activate(context: vscode.ExtensionContext) {
           arguments: [diagnosticContent],
         };
 
-        console.log('  ✅ Returning 1 code action:', copyDiagnosticAction.title);
         return [copyDiagnosticAction];
       },
     },
@@ -71,14 +57,12 @@ export function activate(context: vscode.ExtensionContext) {
     }
   );
 
-  console.log('✅ Code Action Provider registered successfully');
-
   // Command to copy the content
   const copyCommand = vscode.commands.registerCommand(
     'intellisenseClipboard.copyContent',
     async (content: string) => {
       await vscode.env.clipboard.writeText(content);
-      vscode.window.showInformationMessage('✓ IntelliSense info copied to clipboard!');
+      vscode.window.showInformationMessage('Error message copied to clipboard');
     }
   );
 
@@ -129,7 +113,9 @@ export function activate(context: vscode.ExtensionContext) {
         const diagnosticContent = diagnosticMessages.join('\n\n---\n\n');
         await vscode.env.clipboard.writeText(diagnosticContent);
 
-        vscode.window.showInformationMessage(`✓ Copied ${diagnosticsAtCursor.length} diagnostic(s) to clipboard!`);
+        const count = diagnosticsAtCursor.length;
+        const plural = count === 1 ? 'diagnostic' : 'diagnostics';
+        vscode.window.showInformationMessage(`Copied ${count} ${plural} to clipboard`);
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
         vscode.window.showErrorMessage(`Failed to copy: ${errorMessage}`);
@@ -138,8 +124,6 @@ export function activate(context: vscode.ExtensionContext) {
   );
 
   context.subscriptions.push(codeActionProvider, copyCommand, keyboardCommand);
-
-  console.log('🎉 IntelliSense Clipboard extension fully activated!');
 }
 
 export function deactivate() {}
