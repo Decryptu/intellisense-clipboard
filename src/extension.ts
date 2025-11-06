@@ -5,47 +5,49 @@ export function activate(context: vscode.ExtensionContext) {
   const codeActionProvider = vscode.languages.registerCodeActionsProvider(
     '*', // All file types
     {
-      async provideCodeActions(document, range, context, token) {
-        const position = range.start;
-
-        // Get hover content at this position
-        const hovers = await vscode.commands.executeCommand<vscode.Hover[]>(
-          'vscode.executeHoverProvider',
-          document.uri,
-          position
-        );
-
-        if (!hovers || hovers.length === 0) {
+      async provideCodeActions(document, range, codeActionContext, token) {
+        // Only show if there are diagnostics (errors/warnings) at this location
+        const diagnostics = codeActionContext.diagnostics;
+        if (!diagnostics || diagnostics.length === 0) {
           return [];
         }
 
-        // Collect hover content
-        const contents: string[] = [];
-        for (const hover of hovers) {
-          for (const content of hover.contents) {
-            if (typeof content === 'string') {
-              contents.push(content);
-            } else {
-              contents.push(content.value);
-            }
+        // Collect diagnostic messages
+        const diagnosticMessages: string[] = [];
+        for (const diagnostic of diagnostics) {
+          let message = `[${diagnostic.severity === vscode.DiagnosticSeverity.Error ? 'Error' :
+                          diagnostic.severity === vscode.DiagnosticSeverity.Warning ? 'Warning' :
+                          diagnostic.severity === vscode.DiagnosticSeverity.Information ? 'Info' : 'Hint'}]`;
+
+          if (diagnostic.source) {
+            message += ` ${diagnostic.source}`;
           }
+          if (diagnostic.code) {
+            message += ` (${diagnostic.code})`;
+          }
+          message += `\n${diagnostic.message}`;
+
+          diagnosticMessages.push(message);
         }
 
-        const fullContent = contents.join('\n\n---\n\n');
+        const diagnosticContent = diagnosticMessages.join('\n\n---\n\n');
 
-        // Create the copy action
-        const copyAction = new vscode.CodeAction(
-          '📋 Copy IntelliSense Info',
-          vscode.CodeActionKind.Empty
+        // Create the copy action for diagnostics
+        const copyDiagnosticAction = new vscode.CodeAction(
+          '📋 Copy Error Message',
+          vscode.CodeActionKind.QuickFix
         );
-        copyAction.command = {
+        copyDiagnosticAction.command = {
           command: 'intellisenseClipboard.copyContent',
-          title: 'Copy IntelliSense Info',
-          arguments: [fullContent],
+          title: 'Copy Error Message',
+          arguments: [diagnosticContent],
         };
 
-        return [copyAction];
+        return [copyDiagnosticAction];
       },
+    },
+    {
+      providedCodeActionKinds: [vscode.CodeActionKind.QuickFix]
     }
   );
 
