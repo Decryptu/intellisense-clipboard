@@ -1,9 +1,19 @@
 import * as vscode from 'vscode';
 
 export function activate(context: vscode.ExtensionContext) {
+  console.log('🚀 IntelliSense Clipboard extension is activating!');
+
   // Register Code Action Provider (Quick Fix)
+  // Register for specific languages instead of '*'
+  const selector = [
+    { language: 'typescript', scheme: 'file' },
+    { language: 'javascript', scheme: 'file' },
+    { language: 'typescriptreact', scheme: 'file' },
+    { language: 'javascriptreact', scheme: 'file' }
+  ];
+
   const codeActionProvider = vscode.languages.registerCodeActionsProvider(
-    '*', // All file types
+    selector,
     {
       async provideCodeActions(document, range, codeActionContext, token) {
         console.log('🔍 provideCodeActions called!');
@@ -60,6 +70,8 @@ export function activate(context: vscode.ExtensionContext) {
       providedCodeActionKinds: [vscode.CodeActionKind.QuickFix]
     }
   );
+
+  console.log('✅ Code Action Provider registered successfully');
 
   // Command to copy the content
   const copyCommand = vscode.commands.registerCommand(
@@ -126,6 +138,8 @@ export function activate(context: vscode.ExtensionContext) {
   );
 
   context.subscriptions.push(codeActionProvider, copyCommand, keyboardCommand);
+
+  console.log('🎉 IntelliSense Clipboard extension fully activated!');
 }
 
 export function deactivate() {}
