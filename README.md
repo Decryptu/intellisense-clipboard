@@ -27,7 +27,7 @@ Quickly copy TypeScript and JavaScript error messages and diagnostics to your cl
 
 Error messages are copied in this format:
 
-```
+```ts
 [Error] ts (2322)
 Type 'string' is not assignable to type 'number'.
 ```
@@ -54,6 +54,7 @@ This extension does not add any VS Code settings.
 ### 0.1.0
 
 Initial release:
+
 - Quick Fix menu integration
 - Keyboard shortcut support
 - TypeScript and JavaScript support
