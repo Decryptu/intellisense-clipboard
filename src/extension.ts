@@ -6,15 +6,24 @@ export function activate(context: vscode.ExtensionContext) {
     '*', // All file types
     {
       async provideCodeActions(document, range, codeActionContext, token) {
+        console.log('🔍 provideCodeActions called!');
+        console.log('  Range:', range);
+        console.log('  Diagnostics in context:', codeActionContext.diagnostics.length);
+        console.log('  Only requested:', codeActionContext.only?.value);
+        console.log('  Trigger kind:', codeActionContext.triggerKind);
+
         // Only show if there are diagnostics (errors/warnings) at this location
         const diagnostics = codeActionContext.diagnostics;
         if (!diagnostics || diagnostics.length === 0) {
+          console.log('  ❌ No diagnostics, returning empty');
           return [];
         }
 
         // Collect diagnostic messages
         const diagnosticMessages: string[] = [];
         for (const diagnostic of diagnostics) {
+          console.log('  📋 Diagnostic:', diagnostic.message, 'Severity:', diagnostic.severity);
+
           let message = `[${diagnostic.severity === vscode.DiagnosticSeverity.Error ? 'Error' :
                           diagnostic.severity === vscode.DiagnosticSeverity.Warning ? 'Warning' :
                           diagnostic.severity === vscode.DiagnosticSeverity.Information ? 'Info' : 'Hint'}]`;
@@ -43,6 +52,7 @@ export function activate(context: vscode.ExtensionContext) {
           arguments: [diagnosticContent],
         };
 
+        console.log('  ✅ Returning 1 code action:', copyDiagnosticAction.title);
         return [copyDiagnosticAction];
       },
     },
