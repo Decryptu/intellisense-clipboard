@@ -4,6 +4,7 @@
 	"description": "Quickly copy TypeScript and JavaScript error messages from the Quick Fix menu to your clipboard",
 	"version": "0.1.0",
 	"publisher": "Decrypt",
+	"icon": "icon.png",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/Decryptu/intellisense-clipboard"
