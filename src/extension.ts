@@ -60,7 +60,7 @@ export function activate(context: vscode.ExtensionContext) {
     }
   );
 
-  // Keyboard shortcut command
+  // Keyboard shortcut command - copy diagnostics at cursor
   const keyboardCommand = vscode.commands.registerCommand(
     'intellisenseClipboard.copyAtCursor',
     async () => {
@@ -73,32 +73,41 @@ export function activate(context: vscode.ExtensionContext) {
       const document = editor.document;
 
       try {
-        const hovers = await vscode.commands.executeCommand<vscode.Hover[]>(
-          'vscode.executeHoverProvider',
-          document.uri,
-          position
+        // Get all diagnostics for the current document
+        const allDiagnostics = vscode.languages.getDiagnostics(document.uri);
+
+        // Filter diagnostics that contain the cursor position
+        const diagnosticsAtCursor = allDiagnostics.filter(diagnostic =>
+          diagnostic.range.contains(position)
         );
 
-        if (!hovers || hovers.length === 0) {
-          vscode.window.showInformationMessage('No IntelliSense info at cursor');
+        if (diagnosticsAtCursor.length === 0) {
+          vscode.window.showInformationMessage('No error or warning at cursor position');
           return;
         }
 
-        const contents: string[] = [];
-        for (const hover of hovers) {
-          for (const content of hover.contents) {
-            if (typeof content === 'string') {
-              contents.push(content);
-            } else {
-              contents.push(content.value);
-            }
+        // Format diagnostic messages
+        const diagnosticMessages: string[] = [];
+        for (const diagnostic of diagnosticsAtCursor) {
+          let message = `[${diagnostic.severity === vscode.DiagnosticSeverity.Error ? 'Error' :
+                          diagnostic.severity === vscode.DiagnosticSeverity.Warning ? 'Warning' :
+                          diagnostic.severity === vscode.DiagnosticSeverity.Information ? 'Info' : 'Hint'}]`;
+
+          if (diagnostic.source) {
+            message += ` ${diagnostic.source}`;
           }
+          if (diagnostic.code) {
+            message += ` (${diagnostic.code})`;
+          }
+          message += `\n${diagnostic.message}`;
+
+          diagnosticMessages.push(message);
         }
 
-        const fullContent = contents.join('\n\n---\n\n');
-        await vscode.env.clipboard.writeText(fullContent);
+        const diagnosticContent = diagnosticMessages.join('\n\n---\n\n');
+        await vscode.env.clipboard.writeText(diagnosticContent);
 
-        vscode.window.showInformationMessage('✓ Copied to clipboard!');
+        vscode.window.showInformationMessage(`✓ Copied ${diagnosticsAtCursor.length} diagnostic(s) to clipboard!`);
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
         vscode.window.showErrorMessage(`Failed to copy: ${errorMessage}`);
