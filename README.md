@@ -2,14 +2,14 @@
 
 # IntelliSense Clipboard
 
-<img width="128" height="128" alt="zigdex-logo" src="https://github.com/user-attachments/assets/203c4298-687c-4c72-b2ed-791f5768bab8" />
+<img width="128" height="128" alt="logo" src="https://github.com/user-attachments/assets/d5a5eac3-79f4-4ab1-891c-52f19fa407aa" />
 
 [![Visual Studio Marketplace Version](https://img.shields.io/visual-studio-marketplace/v/Decrypt.intellisense-clipboard)](https://marketplace.visualstudio.com/items?itemName=Decrypt.intellisense-clipboard)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 Quickly copy TypeScript and JavaScript error messages and diagnostics to your clipboard directly from the Quick Fix menu.
 
-<img width="834" alt="zigdex-screenshot" src="https://github.com/user-attachments/assets/c2ebf09a-51d8-46d1-923f-0160882262ef" />
+<img width="855" height="518" alt="screenshot" src="https://github.com/user-attachments/assets/180a68cd-f9db-4ac1-a079-fd68ce5c9f6c" />
 
 </div>
 
