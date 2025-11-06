@@ -1,51 +1,59 @@
 import * as vscode from 'vscode';
 
 export function activate(context: vscode.ExtensionContext) {
-  // Register Code Action Provider (Quick Fix)
+  // Register Code Action Provider for TypeScript/JavaScript diagnostics
+  const selector = [
+    { language: 'typescript', scheme: 'file' },
+    { language: 'javascript', scheme: 'file' },
+    { language: 'typescriptreact', scheme: 'file' },
+    { language: 'javascriptreact', scheme: 'file' }
+  ];
+
   const codeActionProvider = vscode.languages.registerCodeActionsProvider(
-    '*', // All file types
+    selector,
     {
-      async provideCodeActions(document, range, context, token) {
-        const position = range.start;
-
-        // Get hover content at this position
-        const hovers = await vscode.commands.executeCommand<vscode.Hover[]>(
-          'vscode.executeHoverProvider',
-          document.uri,
-          position
-        );
-
-        if (!hovers || hovers.length === 0) {
+      async provideCodeActions(document, range, codeActionContext, token) {
+        const diagnostics = codeActionContext.diagnostics;
+        if (!diagnostics || diagnostics.length === 0) {
           return [];
         }
 
-        // Collect hover content
-        const contents: string[] = [];
-        for (const hover of hovers) {
-          for (const content of hover.contents) {
-            if (typeof content === 'string') {
-              contents.push(content);
-            } else {
-              contents.push(content.value);
-            }
+        // Collect diagnostic messages
+        const diagnosticMessages: string[] = [];
+        for (const diagnostic of diagnostics) {
+          let message = `[${diagnostic.severity === vscode.DiagnosticSeverity.Error ? 'Error' :
+                          diagnostic.severity === vscode.DiagnosticSeverity.Warning ? 'Warning' :
+                          diagnostic.severity === vscode.DiagnosticSeverity.Information ? 'Info' : 'Hint'}]`;
+
+          if (diagnostic.source) {
+            message += ` ${diagnostic.source}`;
           }
+          if (diagnostic.code) {
+            message += ` (${diagnostic.code})`;
+          }
+          message += `\n${diagnostic.message}`;
+
+          diagnosticMessages.push(message);
         }
 
-        const fullContent = contents.join('\n\n---\n\n');
+        const diagnosticContent = diagnosticMessages.join('\n\n---\n\n');
 
-        // Create the copy action
-        const copyAction = new vscode.CodeAction(
-          '📋 Copy IntelliSense Info',
-          vscode.CodeActionKind.Empty
+        // Create the copy action for diagnostics
+        const copyDiagnosticAction = new vscode.CodeAction(
+          'Copy Error Message',
+          vscode.CodeActionKind.QuickFix
         );
-        copyAction.command = {
+        copyDiagnosticAction.command = {
           command: 'intellisenseClipboard.copyContent',
-          title: 'Copy IntelliSense Info',
-          arguments: [fullContent],
+          title: 'Copy Error Message',
+          arguments: [diagnosticContent],
         };
 
-        return [copyAction];
+        return [copyDiagnosticAction];
       },
+    },
+    {
+      providedCodeActionKinds: [vscode.CodeActionKind.QuickFix]
     }
   );
 
@@ -54,11 +62,11 @@ export function activate(context: vscode.ExtensionContext) {
     'intellisenseClipboard.copyContent',
     async (content: string) => {
       await vscode.env.clipboard.writeText(content);
-      vscode.window.showInformationMessage('✓ IntelliSense info copied to clipboard!');
+      vscode.window.showInformationMessage('Error message copied to clipboard');
     }
   );
 
-  // Keyboard shortcut command
+  // Keyboard shortcut command - copy diagnostics at cursor
   const keyboardCommand = vscode.commands.registerCommand(
     'intellisenseClipboard.copyAtCursor',
     async () => {
@@ -71,32 +79,43 @@ export function activate(context: vscode.ExtensionContext) {
       const document = editor.document;
 
       try {
-        const hovers = await vscode.commands.executeCommand<vscode.Hover[]>(
-          'vscode.executeHoverProvider',
-          document.uri,
-          position
+        // Get all diagnostics for the current document
+        const allDiagnostics = vscode.languages.getDiagnostics(document.uri);
+
+        // Filter diagnostics that contain the cursor position
+        const diagnosticsAtCursor = allDiagnostics.filter(diagnostic =>
+          diagnostic.range.contains(position)
         );
 
-        if (!hovers || hovers.length === 0) {
-          vscode.window.showInformationMessage('No IntelliSense info at cursor');
+        if (diagnosticsAtCursor.length === 0) {
+          vscode.window.showInformationMessage('No error or warning at cursor position');
           return;
         }
 
-        const contents: string[] = [];
-        for (const hover of hovers) {
-          for (const content of hover.contents) {
-            if (typeof content === 'string') {
-              contents.push(content);
-            } else {
-              contents.push(content.value);
-            }
+        // Format diagnostic messages
+        const diagnosticMessages: string[] = [];
+        for (const diagnostic of diagnosticsAtCursor) {
+          let message = `[${diagnostic.severity === vscode.DiagnosticSeverity.Error ? 'Error' :
+                          diagnostic.severity === vscode.DiagnosticSeverity.Warning ? 'Warning' :
+                          diagnostic.severity === vscode.DiagnosticSeverity.Information ? 'Info' : 'Hint'}]`;
+
+          if (diagnostic.source) {
+            message += ` ${diagnostic.source}`;
           }
+          if (diagnostic.code) {
+            message += ` (${diagnostic.code})`;
+          }
+          message += `\n${diagnostic.message}`;
+
+          diagnosticMessages.push(message);
         }
 
-        const fullContent = contents.join('\n\n---\n\n');
-        await vscode.env.clipboard.writeText(fullContent);
+        const diagnosticContent = diagnosticMessages.join('\n\n---\n\n');
+        await vscode.env.clipboard.writeText(diagnosticContent);
 
-        vscode.window.showInformationMessage('✓ Copied to clipboard!');
+        const count = diagnosticsAtCursor.length;
+        const plural = count === 1 ? 'diagnostic' : 'diagnostics';
+        vscode.window.showInformationMessage(`Copied ${count} ${plural} to clipboard`);
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
         vscode.window.showErrorMessage(`Failed to copy: ${errorMessage}`);

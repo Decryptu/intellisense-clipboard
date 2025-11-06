@@ -1,53 +1,57 @@
 {
 	"name": "intellisense-clipboard",
 	"displayName": "IntelliSense Clipboard",
-	"description": "Quickly copy IntelliSense hover information, type definitions, and error messages to your clipboard",
+	"description": "Quickly copy TypeScript and JavaScript error messages from the Quick Fix menu to your clipboard",
 	"version": "0.1.0",
-	"publisher": "your-publisher-name",
+	"publisher": "Decryptu",
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/yourusername/intellisense-clipboard"
+		"url": "https://github.com/Decryptu/intellisense-clipboard"
 	},
 	"engines": {
 		"vscode": "^1.80.0"
 	},
 	"categories": [
-		"Other",
-		"Programming Languages"
+		"Other"
 	],
 	"keywords": [
 		"clipboard",
 		"copy",
-		"intellisense",
-		"hover",
-		"tooltip",
-		"type definition",
-		"error message"
+		"error",
+		"diagnostic",
+		"typescript",
+		"javascript",
+		"quick fix"
 	],
-	"activationEvents": [],
+	"activationEvents": [
+		"onLanguage:typescript",
+		"onLanguage:javascript",
+		"onLanguage:typescriptreact",
+		"onLanguage:javascriptreact"
+	],
 	"main": "./out/extension.js",
 	"contributes": {
 		"commands": [
 			{
 				"command": "intellisenseClipboard.copyContent",
-				"title": "Copy IntelliSense Info"
+				"title": "Copy Error Message"
 			},
 			{
 				"command": "intellisenseClipboard.copyAtCursor",
-				"title": "Copy IntelliSense Info at Cursor"
+				"title": "Copy Diagnostic at Cursor"
 			}
 		],
 		"keybindings": [
 			{
 				"command": "intellisenseClipboard.copyAtCursor",
-				"key": "ctrl+shift+c",
-				"mac": "cmd+shift+c",
+				"key": "ctrl+alt+c",
+				"mac": "cmd+alt+c",
 				"when": "editorTextFocus"
 			}
 		]
 	},
 	"scripts": {
-		"vscode:prepublish": "bun run compile",
+		"vscode:prepublish": "npm run compile",
 		"compile": "tsc -p ./",
 		"watch": "tsc -watch -p ./",
 		"lint": "biome check .",
